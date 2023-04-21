@@ -17,11 +17,10 @@ __maintainer__ = "Morgan Fouesneau"
 __email__ = "fouesneau@mpia.de"
 __status__ = "Production"
 
-
+import numpy as np
 from numpy.polynomial.polynomial import polyvander
 from scipy.stats import norm
 from typing import Union
-
 
 def polynomial_model(
     deg: int,
@@ -145,7 +144,7 @@ for _ in sampler.sample(state, iterations=1_000, progress=True):
 
 
 # Explore the outputs
-import arviz
+import arviz as az
 
 names = ["1", "x"] + [rf"$x^{k}$" for k in range(2, deg+1)]
 data = az.from_emcee(sampler, var_names=names, )
@@ -181,6 +180,7 @@ for dim in range(1, len(ctrue)):
 
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
+plt.figure()
 # plot the ppc
 xplot = np.linspace(-5, 5, 1000)
 yplot = polynomial_model(deg, ctrue, xplot)
