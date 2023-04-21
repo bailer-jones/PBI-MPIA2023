@@ -180,6 +180,7 @@ for dim in range(1, len(ctrue)):
 
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
+plt.figure()
 # plot the ppc
 xplot = np.linspace(-5, 5, 1000)
 yplot = polynomial_model(deg, ctrue, xplot)
