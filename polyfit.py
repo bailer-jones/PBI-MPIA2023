@@ -8,6 +8,13 @@ matplotlib
 emcee
 arviz
 """
+import arviz as az
+import emcee
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy.polynomial.polynomial import polyvander
+from scipy.stats import norm
+
 __author__ = "Morgan Fouesneau"
 __copyright__ = "Copyright (c) 2022,  Max Planck Institute for Astronomy"
 __credits__ = ["Morgan Fouesneau", "Coryn Bailer-Jones", "Ivelina Momcheva"]
@@ -17,16 +24,13 @@ __maintainer__ = "Morgan Fouesneau"
 __email__ = "fouesneau@mpia.de"
 __status__ = "Production"
 
-import numpy as np
-from numpy.polynomial.polynomial import polyvander
-from scipy.stats import norm
-from typing import Union
+
 
 def polynomial_model(
     deg: int,
     coeffs: np.array,
     x: np.array
-    ):
+):
     """
     Generate a polynomial model y = sum(a[k] * x ** k, k=[0..deg])
 
@@ -36,7 +40,8 @@ def polynomial_model(
     :returns: polynomial model evaluated at x
     """
     if len(coeffs) != (deg + 1):
-        raise AttributeError(f"The coefficient vector is not of length 'deg':{deg + 1} vs. {coeffs.shape}")
+        raise AttributeError(
+            f"The coefficient vector is not of length 'deg':{deg + 1} vs. {coeffs.shape}")
     if np.ndim(x) == 1:
         X = polyvander(x, deg)  # [1, x, x**2, ..., x ** deg]
         return X @ np.array(coeffs)
@@ -44,12 +49,12 @@ def polynomial_model(
 
 
 def lnprior(
-    deg: int,
-    coeffs: np.array,
-    l1: float = 0.,
-    l2: float = 0.) -> float:
+        deg: int,
+        coeffs: np.array,
+        l1: float = 0.,
+        l2: float = 0.) -> float:
     """ln Prior on the polynomial parameters: ln p(coeffs)
-    
+
     Generate a polynomial model y = sum(a[k] * x ** k, k=[0..deg])
 
     :param deg: degree of the polynomial
@@ -64,11 +69,11 @@ def lnprior(
 
 
 def lnlikelihood(
-    coeffs: np.array, 
-    x: np.array, 
-    y: np.array, 
-    sy: np.array, 
-    deg: int):
+        coeffs: np.array,
+        x: np.array,
+        y: np.array,
+        sy: np.array,
+        deg: int):
     """ ln Likelihood:  ln p(y | x, sy, coeffs)
 
     :param coeffs: coefficients of the polynomials
@@ -79,15 +84,15 @@ def lnlikelihood(
     :return: ln-likelihood
     """
     ypred = polynomial_model(deg, coeffs, x)
-    return  np.sum(norm.logpdf(y, loc=ypred, scale=sy))
+    return np.sum(norm.logpdf(y, loc=ypred, scale=sy))
 
 
 def lnposterior(
-    coeffs: np.array, 
-    x: np.array, 
-    y: np.array, 
-    sy: np.array, 
-    deg: int):
+        coeffs: np.array,
+        x: np.array,
+        y: np.array,
+        sy: np.array,
+        deg: int):
     """ ln posterior:   ln p(y | x, sy, coeffs) + ln p(coeffs)
 
     :param coeffs: coefficients of the polynomials
@@ -114,23 +119,24 @@ y = ytrue + np.random.normal(0, sy)
 xplot = np.linspace(-5, 5, 1000)
 yplot = polynomial_model(deg, ctrue, xplot)
 plt.plot(xplot, yplot, color='0.5', label='ytrue')
-plt.errorbar(x, y, yerr=sy, linestyle='None', marker='o', mfc='w', label='yobs')
+plt.errorbar(x, y, yerr=sy, linestyle='None',
+             marker='o', mfc='w', label='yobs')
 plt.ylim(y.min() - 5, y.max() + 5)
 plt.legend(loc='best', frameon=False)
 plt.xlabel('x')
-plt.ylabel('y');
+plt.ylabel('y')
 
 # Proceed to mcmc fitting
-import emcee
 
 ndim, nwalkers = deg + 1, 10
 p0 = np.random.randn(nwalkers, ndim)
 
 X = polyvander(x, deg)  # precompute
-sampler = emcee.EnsembleSampler(nwalkers, ndim, lnposterior, args=[X, y, sy, deg])
+sampler = emcee.EnsembleSampler(
+    nwalkers, ndim, lnposterior, args=[X, y, sy, deg])
 
 
-# We could run sampler.run_mcmc(p0, 2000) but sometimes it could be slow, 
+# We could run sampler.run_mcmc(p0, 2000) but sometimes it could be slow,
 # and it is nice to monitor what happens
 
 # Let's run the burn-in part
@@ -144,7 +150,6 @@ for _ in sampler.sample(state, iterations=1_000, progress=True):
 
 
 # Explore the outputs
-import arviz as az
 
 names = ["1", "x"] + [rf"$x^{k}$" for k in range(2, deg+1)]
 data = az.from_emcee(sampler, var_names=names, )
@@ -193,8 +198,9 @@ plt.plot(xplot, ypred.T, rasterized=True, color='k', alpha=0.2, lw=0.1)
 plt.plot(xplot, yplot, color='w', lw=5)
 plt.plot(xplot, yplot, color='C0', lw=3, label='ytrue')
 
-plt.errorbar(x, y, yerr=sy, linestyle='None', marker='o', mfc='w', label='yobs')
+plt.errorbar(x, y, yerr=sy, linestyle='None',
+             marker='o', mfc='w', label='yobs')
 plt.ylim(y.min() - 5, y.max() + 5)
 plt.legend(loc='best', frameon=False)
 plt.xlabel('x')
-plt.ylabel('y');
+plt.ylabel('y')
