@@ -94,13 +94,6 @@ p_b_aD <- p_b_aD/(delta_b*sum(p_b_aD))
 
 # Make plots
 
-pdf("signal_background_estimation_0.pdf", 4, 4)
-# Plot data
-par(mfrow=c(1,1), mgp=c(2.0,0.8,0), mar=c(3.5,3.5,1,1), oma=0.1*c(1,1,1,1))
-xplot <- seq(from=min(xdat), to=max(xdat), by=0.05*w)
-plot(xdat, ddat, ylim=range(c(splot, ddat)), xlab="x", ylab="d")
-dev.off()
-
 pdf("signal_background_estimation_1.pdf", 7, 7)
 # Plot true model (grey), mean model (orange) and data
 par(mfrow=c(2,2), mgp=c(2,0.8,0), mar=c(3.5,3.5,1,1), oma=0.1*c(1,1,1,1))
@@ -128,5 +121,12 @@ plot(a, p_a_D, xlab="amplitude, a", yaxs="i",
      type="l", lwd=2)
 lines(a, p_a_bD, lwd=2, lty=2)
 abline(v=atrue, col="grey")
-
 dev.off()
+
+pdf("signal_background_estimation_0.pdf", 4, 4)
+# Plot data
+par(mfrow=c(1,1), mgp=c(2.0,0.8,0), mar=c(3.5,3.5,1,1), oma=0.1*c(1,1,1,1))
+xplot <- seq(from=min(xdat), to=max(xdat), by=0.05*w)
+plot(xdat, ddat, ylim=range(c(splot, ddat)), xlab="x", ylab="d")
+dev.off()
+
